@@ -548,7 +548,7 @@ model.GGE = function(tabela) {
       
       if(!is.null(Y)){
         
-        validate.model = gge(acast(Y, genotipo ~ id_gge, value.var = "emmean"))
+        validate.model = gge(acast(Y, genotipo ~ id_gge, value.var = "emmean", mean))
         validate.NA = colSums(is.na(validate.model$x))
         validate.NA = length(validate.NA[validate.NA > 1])
         

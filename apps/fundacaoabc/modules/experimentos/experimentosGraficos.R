@@ -364,7 +364,6 @@ grafico.analiseGGE_EstabilidadeMedia = function(gge.model) {
   label_plot <- plot[["data"]][["label"]]
   plot$layers[[8]] <- NULL
   plot$layers[[7]] <- NULL
-  plot$layers[[6]] <- NULL
   
   plot = plot + geom_text_repel(label = label_plot, 
                              color = ifelse(

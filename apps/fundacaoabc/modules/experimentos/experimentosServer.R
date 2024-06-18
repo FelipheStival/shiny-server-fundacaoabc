@@ -90,15 +90,15 @@ experimentoServer = function(input, output, session) {
     
     if(!is.null(input$culturaInputDoencas)){
       
-      if(input$culturaInputDoencas == 'Feijão'){
-        
-        shinyjs::show('tipodegraoInputDoencas', TRUE)
-        shinyjs::hide('grupoMaturacaoInputDoencas', TRUE)
-        
-      } else {
+      if(input$culturaInputDoencas == 'Soja') {
         
         shinyjs::show('grupoMaturacaoInputDoencas', TRUE)
         shinyjs::hide('tipodegraoInputDoencas', TRUE)
+        
+      } else {
+        
+        shinyjs::show('tipodegraoInputDoencas', TRUE)
+        shinyjs::hide('grupoMaturacaoInputDoencas', TRUE)
         
       }
       

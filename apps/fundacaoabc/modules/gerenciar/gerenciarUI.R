@@ -37,10 +37,8 @@ gerenciarUI = function(){
                              selectInput(
                                inputId = "baseGerenciarInput",
                                label = "Selecione a base: ",
-                               choices = c("doenças" = "doencas",
-                                           "experimentos" = "experimentos",
-                                           "clima" = "clima"
-                                           )
+                               choices = c("experimentos" = "experimentos"
+                               )
                              )
                            )
                          )
@@ -89,7 +87,7 @@ gerenciarUI = function(){
                     
                     #===================Realizar Upload=======================
                     
-                    actionButton(inputId = 'btnnatualizarDados',
+                    actionButton(inputId = 'btnAtualizarDados',
                                  label = 'Atualizar dados')
                 ),
                 

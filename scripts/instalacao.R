@@ -63,7 +63,8 @@ pacotes = list(
   c("rpart", '4.1.16'),
   c("fdm2id", '0.9.6'),
   c("cowplot", '1.1.1'),
-  c("plotly", '4.10.0')
+  c("plotly", '4.10.0'),
+  c("shinybusy", '0.3.1')
 )
 
 # instalando pacotes

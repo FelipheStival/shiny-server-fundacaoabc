@@ -1189,7 +1189,15 @@ agricultorServer = function(input, output, session) {
       
       # Criando interface com o resultado
       output$resultadoArvoreDecisao = renderUI({
-        dataTableOutput('resultadoTabela')
+        box(
+          width = 12,
+          dataTableOutput('resultadoTabela'),
+          downloadButton(
+            outputId = 'downloadDadosArvores',
+            label = "Download",
+            class = NULL
+          )
+        )
       })
       
     } else {
@@ -1208,5 +1216,18 @@ agricultorServer = function(input, output, session) {
   output$resultadoTabela = renderDataTable({
     resultadoSimulacao$data
   },options = list(lengthMenu = c(5, 10, 15, 20), pageLength = 10, scrollX = TRUE,  scrollY = TRUE))
+  
+  
+  
+  # Download dados
+  output$downloadDadosArvores = downloadHandler(
+    filename = function() {
+      paste('resultado', Sys.Date(), '.csv', sep='')
+    },
+    content = function(con) {
+      write.csv(resultadoSimulacao$data, con)
+    }
+  )
+  
   
 }

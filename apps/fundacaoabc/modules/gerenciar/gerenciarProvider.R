@@ -20,22 +20,30 @@ inserirDadosClima = function(novosDados){
         cidade = linha$cidade
         
         # Verificando se existe estado caso não exista irá inserir
-        statment = sprintf("SELECT * FROM estados WHERE nome = '%s'", estado)
+        temp = str_to_upper(str_replace_all(estado, ' ', ''))
+        statment = sprintf("SELECT * FROM estados WHERE normalize_text(nome) = '%s'", temp)
         dadosEstado = banco.provider.executeQuery(statment, DB_DATABASE)
         
         if(nrow(dadosEstado) == 0){
-          statment = sprintf("INSERT INTO public.estados(nome) VALUES ('%s')", estado)
+          statment = sprintf("INSERT INTO estados(nome) VALUES ('%s')", estado)
           dbSendQuery(conn, statment)
         }
         
+        statment = sprintf("SELECT * FROM estados WHERE normalize_text(nome) = '%s'", temp)
+        dadosEstado = banco.provider.executeQuery(statment, DB_DATABASE)
+        
         # Verificando se existe cidade caso não exista irá inserir
-        statment =  sprintf("SELECT * FROM cidades WHERE nome = '%s'", cidade)
+        temp = str_to_upper(str_replace_all(cidade, ' ', ''))
+        statment =  sprintf("SELECT * FROM cidades WHERE normalize_text(nome) = '%s'", temp)
         dadosCidade = banco.provider.executeQuery(statment, DB_DATABASE)
         
         if(nrow(dadosCidade) == 0){
-          statment = sprintf("INSERT INTO public.cidades(nome) VALUES ('%s')", cidade)
+          statment = sprintf("INSERT INTO cidades(nome) VALUES ('%s')", cidade)
           dbSendQuery(conn, statment)
         }
+        
+        statment =  sprintf("SELECT * FROM cidades WHERE normalize_text(nome) = '%s'", temp)
+        dadosCidade = banco.provider.executeQuery(statment, DB_DATABASE)
         
         # Montando data.frame para ser inserido no banco
         dadosInsert = data.frame(
@@ -54,6 +62,9 @@ inserirDadosClima = function(novosDados){
         
         dadosInsert[dadosInsert == 'NULL'] = NA
         
+        # Formatando dados
+        dadosInsert$data = as.Date(dadosInsert$data, format = "%d/%m/%Y")
+        
         # Salvando tabela no banco
         statment = sqlAppendTable(conn, 'clima', dadosInsert)
         dbSendUpdate(conn, statment)
@@ -62,6 +73,13 @@ inserirDadosClima = function(novosDados){
       
     },
     error = function(e){ 
+      
+      shinyalert(
+        title = 'Erro',
+        text = e$message,
+        type = "error"
+      )
+      
       return(FALSE)
     }
   )
@@ -96,22 +114,30 @@ inserirDadosDoencas = function(arquivo){
         sigla = linha$tipo_de_grao
         
         # Verificando se existe a sigla do genotipo caso nao exista irá inserir
-        statment = sprintf("SELECT * FROM tipos_de_graos WHERE sigla = '%s'", sigla)
+        temp = str_to_upper(str_replace_all(sigla, ' ', ''))
+        statment = sprintf("SELECT * FROM tipos_de_graos WHERE normalize_text(sigla) = '%s'", temp)
         tiposDeGraoDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         if(nrow(tiposDeGraoDate) == 0){
-          statment = sprintf("INSERT INTO public.tipos_de_graos(sigla) VALUES ('%s');", sigla)
+          statment = sprintf("INSERT INTO tipos_de_graos(sigla) VALUES ('%s');", sigla)
           dbSendQuery(conn, statment)
         }
         
+        statment = sprintf("SELECT * FROM tipos_de_graos WHERE normalize_text(sigla) = '%s'", temp)
+        tiposDeGraoDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
+        
         # Verificando se existe o genotipo caso nao exita ira inserir
-        statment = sprintf("SELECT * FROM genotipos WHERE nome = '%s'", genotipo)
+        temp = str_to_upper(str_replace_all(genotipo, ' ', ''))
+        statment = sprintf("SELECT * FROM genotipos WHERE normalize_text(nome) = '%s'", temp)
         genotipoDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         if(nrow(genotipoDate) == 0){
-          statment = sprintf("INSERT INTO public.estados(nome) VALUES ('%s')", estado)
+          statment = sprintf("INSERT INTO estados(nome) VALUES ('%s')", estado)
           dbSendQuery(conn, statment)
         }
+        
+        statment = sprintf("SELECT * FROM genotipos WHERE normalize_text(nome) = '%s'", temp)
+        genotipoDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         # dados insert
         dadosInsert = data.frame(
@@ -124,16 +150,37 @@ inserirDadosDoencas = function(arquivo){
         statment = sqlAppendTable(conn, 'genotipos_doencas', dadosInsert)
         dbSendUpdate(conn, statment)
         
+        # Criando objeto retorno
+        retorno = data.frame(
+          status = TRUE,
+          message = 'Dados atualizados com sucesso!'
+        )
+        
+        return(retorno)
+        
       }
       
     },
     error = function(e){ 
-      return(FALSE)
+      
+      # Criando objeto retorno
+      retorno = data.frame(
+        status = FALSE,
+        message = e$message
+      )
+      
+      return(retorno)
+      
     }
   )
   
+  # Criando objeto retorno
+  retorno = data.frame(
+    status = FALSE,
+    message = 'Erro desconhecido!'
+  )
   
-  return(TRUE)
+  return(retorno)
   
 }
 
@@ -155,13 +202,13 @@ inserirDadosExperimentos = function(arquivo){
       # Percorrendo linhas e checando se cidade e estado existe
       nlinhas = nrow(arquivo)
       
-      for(i in 1:nlinhas){
+      for(i in 1:nlinhas) {
         
         linha = arquivo[i,]
         
         local = linha$local
         cidade = linha$cidade
-        estados = linha$estados
+        estados = linha$estado
         genotipo = linha$genotipo
         tipo_de_grao = linha$tipo_de_grao
         cultura = linha$cultura
@@ -169,87 +216,92 @@ inserirDadosExperimentos = function(arquivo){
         #=====================================================================
         # Verificando se existe o estado, caso não exista será inserido
         #=====================================================================
-        statment = sprintf("SELECT * FROM estados WHERE nome = '%s'", estados)
+        temp = str_to_upper(str_replace_all(estados, ' ', ''))
+        statment = sprintf("SELECT * FROM estados WHERE normalize_text(nome) = '%s'", temp)
         estadoDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
-        if(nrow(estadoDate) == 0){
-          statment = sprintf("INSERT INTO public.estados(nome) VALUES ('%s');", estados)
+        if(nrow(estadoDate) == 0) {
+          statment = sprintf("INSERT INTO estados(nome) VALUES ('%s');", estados)
           dbSendUpdate(conn, statment)
         }
         
-        statment = sprintf("SELECT * FROM estados WHERE nome = '%s'", estados)
+        statment = sprintf("SELECT * FROM estados WHERE normalize_text(nome) = '%s'", temp)
         estadoDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         #=====================================================================
         # Verificando se existe a cidade
         #=====================================================================
-        statment = sprintf("SELECT * FROM cidades WHERE nome = '%s'", cidade)
+        temp =  str_to_upper(str_replace_all(cidade, ' ', ''))
+        statment = sprintf("SELECT * FROM cidades WHERE normalize_text(nome) = '%s'", temp)
         cidadeDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
-        if(nrow(cidadeDate) == 0){
-          statment = sprintf("INSERT INTO public.cidades(nome, id_estado) VALUES ('%s',%s);", cidade, estadoDate[1, 'id'])
+        if(nrow(cidadeDate) == 0) {
+          statment = sprintf("INSERT INTO cidades(nome, id_estado) VALUES ('%s',%s);", cidade, estadoDate[1, 'id'])
           dbSendUpdate(conn, statment)
         }
         
-        statment = sprintf("SELECT * FROM cidades WHERE nome = '%s'", cidade)
+        statment = sprintf("SELECT * FROM cidades WHERE normalize_text(nome) = '%s'", temp)
         cidadeDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         #=====================================================================
         # Verificando se existe o local caso não exista será inserido
         #=====================================================================
-        statment = sprintf("SELECT * FROM locais WHERE nome = '%s'", local)
+        temp = str_to_upper(str_replace_all(local, ' ', ''))
+        statment = sprintf("SELECT * FROM locais WHERE normalize_text(nome) = '%s'", local)
         localDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         if(nrow(localDate) == 0){
-          statment = sprintf("INSERT INTO public.locais(nome, id_cidade) VALUES ('%s',%s);", local, cidadeDate[1, 'id'])
+          statment = sprintf("INSERT INTO locais(nome, id_cidade) VALUES ('%s',%s);", local, cidadeDate[1, 'id'])
           dbSendUpdate(conn, statment)
         }
         
-        statment = sprintf("SELECT * FROM locais WHERE nome = '%s'", local)
+        statment = sprintf("SELECT * FROM locais WHERE normalize_text(nome) = '%s'", temp)
         localDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         #====================================================================
         # Verificando se tipo de grao exista, caso não exista será inserido
         #====================================================================
-        statment = sprintf("SELECT * FROM tipos_de_graos WHERE sigla = '%s'", tipo_de_grao)
+        temp = str_to_upper(str_replace_all(tipo_de_grao, ' ', ''))
+        statment = sprintf("SELECT * FROM tipos_de_graos WHERE normalize_text(sigla) = '%s'", temp)
         tipoDeGraoDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         if(nrow(tipoDeGraoDate) == 0){
-          statment = sprintf("INSERT INTO public.tipos_de_graos(sigla) VALUES ('%s');", tipo_de_grao)
+          statment = sprintf("INSERT INTO tipos_de_graos(sigla) VALUES ('%s');", tipo_de_grao)
           dbSendUpdate(conn, statment)
         }
         
-        statment = sprintf("SELECT * FROM tipos_de_graos WHERE sigla = '%s'", tipo_de_grao)
+        statment = sprintf("SELECT * FROM tipos_de_graos WHERE normalize_text(sigla) = '%s'", temp)
         tipoDeGraoDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         #=====================================================================
         # Verificando se existe genotipo caso não exista será inserido
         #=====================================================================
-        statment = sprintf("SELECT * FROM genotipos WHERE nome = '%s'", genotipo)
+        temp = str_to_upper(str_replace_all(genotipo, ' ', ''))
+        statment = sprintf("SELECT * FROM genotipos WHERE normalize_text(nome) = '%s'", genotipo)
         genotipoDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         if(nrow(genotipoDate) == 0){
-          statment = sprintf("INSERT INTO public.genotipos(nome) VALUES ('%s');", genotipo)
+          statment = sprintf("INSERT INTO genotipos(nome) VALUES ('%s');", genotipo)
           dbSendUpdate(conn, statment)
         }
         
-        statment = sprintf("SELECT * FROM genotipos WHERE nome = '%s'", genotipo)
+        statment = sprintf("SELECT * FROM genotipos WHERE normalize_text(nome) = '%s'", temp)
         genotipoDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         #=====================================================================
         # Verificando se existe a cultura caso não exista será inserido
         #=====================================================================
-        statment = sprintf("SELECT * FROM cultura WHERE nome = '%s'", cultura)
+        temp = str_to_upper(str_replace_all(cultura, ' ', ''))
+        statment = sprintf("SELECT * FROM cultura WHERE normalize_text(nome) = '%s'", temp)
         culturaDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
         
         if(nrow(culturaDate) == 0){
-          statment = sprintf("INSERT INTO public.cultura(nome) VALUES ('%s');", cultura)
+          statment = sprintf("INSERT INTO cultura(nome) VALUES ('%s');", cultura)
           dbSendUpdate(conn, statment)
         }
         
-        statment = sprintf("SELECT * FROM cultura WHERE nome = '%s'", cultura)
+        statment = sprintf("SELECT * FROM cultura WHERE normalize_text(nome) = '%s'", temp)
         culturaDate = banco.provider.executeQuery(statment, DOENCA_DB_DATABASE)
-        
         
         #=====================================================================
         # Preparando data.frame para ser inserido no banco
@@ -271,20 +323,56 @@ inserirDadosExperimentos = function(arquivo){
           id_cultura = culturaDate[1, 'id']
         )
         
+        # Tratando fugincidade e repeticao
+        dadosInsert$fungicida = str_to_upper(dadosInsert$fungicida)
+        dadosInsert$irrigacao = str_to_upper(dadosInsert$repeticao)
+        
+        dadosInsert$fungicida = ifelse(dadosInsert$fungicida == 'SIM', 'TRUE', 'FALSE')
+        dadosInsert$irrigacao = ifelse(dadosInsert$irrigacao == 'NAO', 'TRUE', 'FALSE')
+        
+        # Formatando datas
+        dadosInsert$data_semeadura = as.Date(dadosInsert$data_semeadura, format = "%d/%m/%Y")
+        dadosInsert$data_emergencia = as.Date(dadosInsert$data_emergencia, format = "%d/%m/%Y")
+        dadosInsert$data_inicio_floracao = as.Date(dadosInsert$data_inicio_floracao, format = "%d/%m/%Y")
+        dadosInsert$data_inicio_ponto_colheita = as.Date(dadosInsert$data_inicio_ponto_colheita, format = "%d/%m/%Y")
+        dadosInsert$data_inicio_colheita = as.Date(dadosInsert$data_inicio_colheita, format = "%d/%m/%Y")
+        
         # Salvando tabela no banco
         statment = sqlAppendTable(conn, 'ensaios', dadosInsert)
         dbSendUpdate(conn, statment)
         
+        # Criando objeto retorno
+        retorno = data.frame(
+          status = TRUE,
+          message = 'Dados atualizados com sucesso!'
+        )
+        
+        return(retorno)
+        
       }
       
     },
-    error = function(e){ 
-      return(FALSE)
+    error = function(e) { 
+      
+      # Criando objeto retorno
+      retorno = data.frame(
+        status = FALSE,
+        message = e$message
+      )
+      
+      return(retorno)
+      
     }
   )
   
   
-  return(TRUE)
+  # Criando objeto retorno
+  retorno = data.frame(
+    status = FALSE,
+    message = 'Erro desconhecido'
+  )
+  
+  return(retorno)
   
 }
 
@@ -330,13 +418,14 @@ verificarColunaDoencas = function(arquivo){
 verificarColunasExperimentos = function(arquivo){
   
   #selecionando colunas PROD e GENOTIPO
-  requiredColumn = c("id_ensaio", "safra", "irrigacao", "fungicida", "repeticao", "produtividade", "numero_de_plantas_na_parcela_util_vegetativo_linha_um",
-                     "data_semeadura", "data_emergencia", "data_inicio_floracao", "data_inicio_ponto_colheita", "data_inicio_colheita",
-                     "epoca", "local", "cidade", "estados", "genotipo", "tipo_de_grao", "cultura")
+  requiredColumn = c("id_ensaio", "safra", "irrigacao", "fungicida", "repeticao", "produtividade",
+                     "data_semeadura", "data_emergencia", "data_inicio_floracao", "data_inicio_ponto_colheita",
+                     "data_inicio_colheita", "local", "cidade", "estado", 
+                     "genotipo", "tipo_de_grao", "cultura")
   
-  indexColumn = which(names(arquivo) %in% requiredColumn)
+  indexColumn = setdiff(requiredColumn, names(arquivo))
   
-  if(length(indexColumn) == 19){
+  if(length(indexColumn) == 0){
     return(TRUE)
   }
   

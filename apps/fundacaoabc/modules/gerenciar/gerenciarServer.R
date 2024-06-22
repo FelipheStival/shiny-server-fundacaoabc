@@ -6,7 +6,8 @@ gerenciarServer = function(input, output, session) {
                change_page('/')
   )
   
-  # Upload arquivo
+  #====================================#
+  # Upload do arquivo
   dadosUpload = reactive({
     
     dados = NULL
@@ -23,15 +24,26 @@ gerenciarServer = function(input, output, session) {
     
   })
   
-  # Escrevendo tabela para o usuário
+  #====================================#
+  
+  
+  #====================================#
+  # Exibição da tabela para o usuário
+  
   observe({
     
     if(!is.null(dadosUpload())){
       
-      # Verificando separador do arquivo
+      #====================================#
+      # Validando arquivo
+      
       if(ncol(dadosUpload()) > 1){
         
         switch(input$baseGerenciarInput,
+               
+               #====================================#
+               # Validando e exibindo dados doenca
+               
                "doencas" = {
                  
                  if(verificarColunaDoencas(dadosUpload())){
@@ -52,7 +64,13 @@ gerenciarServer = function(input, output, session) {
                    
                  }
                  
+                 #====================================#
+                 
                },
+               
+               #====================================#
+               # Validando e exibindo dados experimentos
+               
                "experimentos" = {
                  
                  if(verificarColunasExperimentos(dadosUpload())){
@@ -73,10 +91,16 @@ gerenciarServer = function(input, output, session) {
                    
                  }
                  
+                 #====================================#
+                 
                },
+               
+               #====================================#
+               # Validando e exibindo dados clima
+               
                "clima" = {
                  
-                 if(verificarColunasClima(dadosUpload())){
+                 if(verificarColunasClima(dadosUpload())) {
                    
                    output$UItabela = renderUI({
                      
@@ -95,6 +119,8 @@ gerenciarServer = function(input, output, session) {
                  }
                  
                }
+               
+               #====================================#
         )
         
       } else {
@@ -109,23 +135,40 @@ gerenciarServer = function(input, output, session) {
       
     } else{
       
-      #Visualizacao tabela
+      #====================================#
+      # Escreve aviso para usuário importar os dados
+      
       output$UItabela = renderUI({
         HTML('<center><h4>Escolha um arquivo para começar</h4></center>')
       })
+      
+      #====================================#
+      
       
     }
     
   })
   
-  # Escrendo tabela
+  #====================================#
+  
+  
+  #====================================#
+  # Escreve Tabela para visualização
+  
   output$tabelaUpload = renderDataTable({
+    
     datatable(dadosUpload(),options = list(scrollY = '500px'))
+    
   })
   
+  #====================================#
   
-  #=======================Evento botao atualizar======================
-  observeEvent(input$btnnatualizarDados, {
+  
+  
+  #====================================#
+  # Botão de atualizaros dados
+  
+  observeEvent(input$btnAtualizarDados, {
     
     # Verificando se o arquivo foi inserido
     if(!is.null(dadosUpload())){
@@ -135,15 +178,20 @@ gerenciarServer = function(input, output, session) {
         
         switch(input$baseGerenciarInput,
                "doencas" = {
+                 
+                 #============================================
+                 # Método para atualizar os dados de doencas
+                 #============================================
                  if(verificarColunaDoencas(dadosUpload())){
                    
                    show_modal_spinner(spin = 'circle')
+                   result = inserirDadosDoencas(dadosUpload())
                    
-                   if(inserirDadosDoencas(dadosUpload())){
+                   if(result$status){
                      
                      shinyalert(
                        title = 'Sucesso',
-                       text = 'Dados atualizados com sucesso',
+                       text = result$message,
                        type = "success"
                      )
                      
@@ -152,7 +200,7 @@ gerenciarServer = function(input, output, session) {
                    
                    shinyalert(
                      title = 'Erro',
-                     text = 'Erro ao atualizar dados',
+                     text = result$message,
                      type = "error"
                    )
                    
@@ -161,16 +209,22 @@ gerenciarServer = function(input, output, session) {
                  remove_modal_progress()
                  
                },
+               
+               #=================================================
+               # Método para atualiazr os dados de experimentos
+               #=================================================
                "experimentos" = {
+                 
                  if(verificarColunasExperimentos(dadosUpload())){
                    
                    show_modal_spinner(spin = 'circle')
+                   result = inserirDadosExperimentos(dadosUpload())
                    
-                   if(inserirDadosExperimentos(dadosUpload())){
+                   if(result$status){
                      
                      shinyalert(
                        title = 'Sucesso',
-                       text = 'Dados atualizados com sucesso',
+                       text = result$message,
                        type = "success"
                      )
                      
@@ -178,7 +232,7 @@ gerenciarServer = function(input, output, session) {
                      
                      shinyalert(
                        title = 'Erro',
-                       text = 'Erro ao atualizar dados',
+                       text = result$message,
                        type = "error"
                      )
                      
@@ -189,16 +243,22 @@ gerenciarServer = function(input, output, session) {
                  }
                  
                },
+               
+               #===========================================
+               # Método para atualizar os dados de clima
+               #===========================================
                "clima" = {
+                 
                  if(verificarColunasClima(dadosUpload())){
                    
                     show_modal_spinner(spin = 'circle')
+                    result = inserirDadosClima(dadosUpload())
                    
-                    if(inserirDadosClima(dadosUpload())){
+                    if(result$status){
                       
                       shinyalert(
                         title = 'Sucesso',
-                        text = 'Dados atualizados com sucesso',
+                        text = result$message,
                         type = "success"
                       )
                       
@@ -207,7 +267,7 @@ gerenciarServer = function(input, output, session) {
                    
                    shinyalert(
                      title = 'Erro',
-                     text = 'Erro ao atualizar dados',
+                     text = result$message,
                      type = "error"
                    )
                    

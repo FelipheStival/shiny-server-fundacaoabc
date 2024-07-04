@@ -1,25 +1,30 @@
 # Metodo para abrir a conexao com o banco de dados
 banco.provider.openConnection = function(dbname) {
   
-  # configurando driver
-  driver = JDBC("org.postgresql.Driver",
-                "driver//postgresql-42.2.22.jar")
-  
   # criando conexao
   if(dbname == DB_DATABASE){
-    conn = dbConnect(driver,
-                     sprintf("jdbc:postgresql://%s:%s/%s",DB_HOST,DB_PORT,DB_DATABASE),
-                     DB_USERNAME,
-                     DB_PASSWORD)
+    
+    # configurando driver
+    driver = dbDriver("SQLite")
+    
+    conn = dbConnect(driver, "sqlite//clima.sqlite")
+
     return(conn)
+    
+    
   } else {
-    conn = dbConnect(driver,
-                     sprintf("jdbc:postgresql://%s:%s/%s",DB_HOST,DB_PORT,DOENCA_DB_DATABASE),
-                     DB_USERNAME,
-                     DB_PASSWORD) 
+    
+    # configurando driver
+    driver = dbDriver("SQLite")
+    
+    conn = dbConnect(driver, "sqlite//ensaios.sqlite")
+    
+    return(conn)
+    
   }
   
   return(conn)
+  
 }
 
 # metodo para executar a query

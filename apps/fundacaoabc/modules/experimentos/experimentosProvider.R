@@ -25,7 +25,7 @@ experimentos.provider.dados = function() {
 	   fungicida,
 	   cultura.nome as cultura
 	   
-	FROM public.ensaios
+	FROM ensaios
 	JOIN genotipos ON ensaios.id_genotipo = genotipos.id
 	JOIN locais ON ensaios.id_local = locais.id
 	JOIN cidades ON locais.id_cidade = cidades.id
@@ -35,11 +35,11 @@ experimentos.provider.dados = function() {
   
   dados = banco.provider.executeQuery(statement, DOENCA_DB_DATABASE)
   
-  dados[dados$irrigacao == 't', 'irrigacao'] = 'sim'
-  dados[dados$irrigacao == 'f', 'irrigacao'] = 'nao'
+  dados[dados$irrigacao == 1, 'irrigacao'] = 'sim'
+  dados[dados$irrigacao == 0, 'irrigacao'] = 'nao'
   
-  dados[dados$fungicida == 't', 'fungicida'] = 'com'
-  dados[dados$fungicida == 'f', 'fungicida'] = 'sem'
+  dados[dados$fungicida == 1, 'fungicida'] = 'com'
+  dados[dados$fungicida == 0, 'fungicida'] = 'sem'
   
   return(dados)
   

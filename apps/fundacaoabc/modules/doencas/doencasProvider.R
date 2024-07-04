@@ -34,7 +34,7 @@ getDadosDoencasProvider = function(input){
       set.seed(12432)
       
       dados = banco.provider.executeQuery(sql, DOENCA_DB_DATABASE)
-      dados = dados[,c('local', 'cultura', 'cidade', 'estado', 'fungicida', 'irrigacao', 'genotipo', 'tipo_de_grao', 'repeticao', 'data_semeadura', 'valor_fs', 'valor_fo', 'safra', 'id_ensaio')]
+      dados = dados[,c('local', 'cultura', 'cidade', 'estado', 'fungicida', 'irrigacao', 'genotipo', 'tipo_de_grao', 'repeticao', 'data_semeadura', 'valor_FS', 'valor_FO', 'safra', 'id_ensaio')]
       names(dados) = c('local', 'cultura', 'cidade', 'estado', 'fungicida', 'irrigacao', 'genotipo', 'tipo_de_grao', 'repeticao', 'data_semeadura', 'FS', 'FO', 'safra', 'id_ensaio')
       
       wdata <- dados %>% filter(!is.na(FO), !is.na(FS), FO <= 10, FS <= 10) %>% mutate(FO = str_replace(FO, ",", "."),

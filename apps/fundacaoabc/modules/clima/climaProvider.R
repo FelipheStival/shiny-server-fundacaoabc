@@ -2,7 +2,7 @@
 # Método para obter os estados da tabela estados
 #======================================================================
 climaObterEstados = function() {
-  statement = "SELECT * FROM public.estados"
+  statement = "SELECT * FROM estados"
   estados = banco.provider.executeQuery(statement)
   return(estados)
 }
@@ -16,7 +16,7 @@ climaObterCidades = function(estado) {
     cidades.id,
     cidades.nome,
   	cidades.id_estado
-	FROM public.cidades
+	FROM cidades
 	JOIN estados ON cidades.id_estado = estados.id
 	WHERE estados.nome = '%s'", estado)
   
@@ -43,7 +43,7 @@ climaObterClimaticos = function(cidade, periodo) {
       	clima.Tsolo,
       	estados.nome as nome_estado,
 	      cidades.nome as cidade_nome
-	FROM public.clima
+	FROM clima
 	JOIN cidades ON clima.id_cidade = cidades.id
 	JOIN estados ON cidades.id_estado = estados.id
 	WHERE cidades.nome = '%s'
@@ -309,7 +309,7 @@ climaObterDadosMapa = function() {
   	cidades.latitude as latitude,
   	cidades.longitude as longitude,
   	cidades.id_estado
-	FROM public.cidades
+	FROM cidades
 	JOIN estados ON cidades.id_estado = estados.id"
   dados = banco.provider.executeQuery(statement)
   return(dados)

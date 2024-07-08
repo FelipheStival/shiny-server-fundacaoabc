@@ -29,6 +29,12 @@ experimentosUI =  div(
       useShinyjs(),
       sidebarMenu(
         menuItem(
+          "Tabela",
+          tabName = "downloadTable",
+          icon = icon("table"),
+          selected = T
+        ),
+        menuItem(
           "Gráficos",
           tabName = "dados-perdidos",
           icon = icon("line-chart"),
@@ -41,8 +47,7 @@ experimentosUI =  div(
           menuSubItem(
             "Diagnostico",
             tabName = "diagnostico",
-            icon = icon("line-chart"),
-            selected = T
+            icon = icon("line-chart")
           ),
           menuItem(
             "Analise Estatistica",
@@ -71,6 +76,13 @@ experimentosUI =  div(
             label = "Selecione a cultura:",
             choices = "Feijão"
           ),
+          #selectInput(
+            #inputId = "experimentosInputDoencas",
+            #label = "Selecione os experimentos:",
+            #choices = "Todos",
+            #multiple = T,
+            #selectize = T
+          #),
           selectizeInput(
             inputId = "safraInputDoencas",
             label = "Selecione a safra:",
@@ -118,6 +130,12 @@ experimentosUI =  div(
             label = "Selecione o grupo de maturação: ",
             choices = "Todos",
             selected = "Todos"
+          ),
+          selectInput(
+            inputId = "epocaInputDoencas",
+            label = "Selecione a época: ",
+            choices = "Todos",
+            selected = "Todos"
           )
         )
       )
@@ -130,6 +148,16 @@ experimentosUI =  div(
     
     dashboardBody(
       tabItems(
+        
+        #========= Página Download dados ===============
+        tabItem(
+          tabName = 'downloadTable',
+          box(
+            width = 12,
+            dataTableOutput("tabelaExperimentosDownload") %>% customSpinner(),
+            downloadButton("downloadDadosExperimentos", "Download")
+          )
+        ),
         
         #========= Página análise gge ==================
         tabItem(
@@ -223,6 +251,7 @@ experimentosUI =  div(
         tabItem(tabName = "analise-estatistica",
                 column(
                   width = 3,
+
                   box(
                     width = 12,
                     status = "warning",
@@ -241,7 +270,7 @@ experimentosUI =  div(
                                   "Abaixo da média" = "ABAIXO",
                                   "Todos" = "TODOS"),
                       selected = "ACIMA"
-                    ), 
+                    ),
                   ),
                   box(
                     title = "Download relatorio",
@@ -258,7 +287,10 @@ experimentosUI =  div(
                       label = "Relatório",
                       class = NULL
                     )
-                  )
+                  ),
+                  
+                  infoBoxOutput("numeroGenotiposInfo", width = 12)
+                  
                 ),
                 column(
                   width = 9,
@@ -319,7 +351,7 @@ experimentosUI =  div(
                     status = "warning",
                     selectInput(
                       inputId =  "select_analiseEstatistica_local_potencial_genotipo",
-                      label = "selecione o local:",
+                      label = "Selecione o local:",
                       choices = c("AL_TRA"),
                       selected = "AL_TRA"
                     )

@@ -71,6 +71,7 @@ experimentos.provider.dadosFiltrados = function(dados, input) {
   indexSafra = which(input[['safraInputDoencas']] == "Todos")
   indexCategoria =  which(input[['categoriaInputDoencas']] == "Todos")
   indexGrupoMaturacao = which(input[['grupoMaturacaoInputDoencas']] == "Todos")
+  indexExperimentos =  which(input[['experimentosInputDoencas']] == "Todos")
   
   # Filtrando cultura
   if(length(indexCultura) == 0 & !is.null(input$culturaInputDoencas)){
@@ -119,6 +120,11 @@ experimentos.provider.dadosFiltrados = function(dados, input) {
     if(input$culturaInputDoencas == 'Soja'){
       filtrado = filtrado[filtrado$grupo_maturacao %in% input$grupoMaturacaoInputDoencas, ]
     }
+  }
+  
+  # Filtrando experimentos
+  if(!is.null(input$experimentosInputDoencas)){
+    filtrado = filtrado[filtrado$id_ensaio %in% input$experimentosInputDoencas, ]
   }
   
   return(filtrado)
@@ -209,11 +215,15 @@ TE1 = function(df, y, rep, gen, trials, accuracy) {
   )
 }
 
+#=====================================================
+# Método para obter o dignostico do experimentos
+#=====================================================
 service.getDiagostico = function(tabela, inputUsuario) {
   
   indicadores_bind = NULL
   
   tryCatch(
+    
     expr = {
       
       # Extraindo dados do filtrado
@@ -260,6 +270,22 @@ service.getDiagostico = function(tabela, inputUsuario) {
                                 `Tipo de grão` = capture.output(cat(inputUsuario$tipodegraoInputDoencas, sep = ','))
       )
       
+      # Calculando coeficiente de variação
+      cv = dadosModelo %>%
+        select(produtividade, id_ensaio) %>%
+        group_by(id_ensaio) %>%
+        summarize(cv = service.coeficienteVariacao(produtividade))
+      
+      # Adicionando coluna ao resultado
+      indicadores_bind$`Coeficiente de Variação (%)` = round(cv$cv, 2)
+      
+      # Ordenando resultado
+      indicadores_bind = indicadores_bind %>%
+        select('Codigodo Experimento', 'Média BLUP (kg/ha)', 'Valor BIC (BLUP)', 'Média BLUE(kg/ha)',
+               'Valor BIC(BLUP)', 'MEDIA ARITMETICA(kg/ha)', 'Coeficiente de Variação (%)', 'Local',
+               'Cidade', 'UF', 'Irrigação', 'Fungicida', 'Tipo de grão', 'Coeficiente de Variação (%)')
+      
+      
     },
     error = function(e){ 
       indicadores_bind = NULL
@@ -297,6 +323,18 @@ service.getY = function(tabela, relatorio = FALSE) {
       return(NULL)
     }
   )
+}
+
+#=====================================================
+# Método para obter o coefiente de variação
+#=====================================================
+service.coeficienteVariacao = function(dados) {
+  
+  media = mean(dados)
+  desvio_padrao = sd(dados)
+  cv = (desvio_padrao / media) * 100
+  return(cv)
+  
 }
 
 service.getMean = function(tabela, input) {

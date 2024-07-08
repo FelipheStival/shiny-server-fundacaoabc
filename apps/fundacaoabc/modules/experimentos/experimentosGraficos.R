@@ -395,7 +395,7 @@ grafico.pontecialProdutivo = function(dados, localInput) {
     filter(local == localInput) %>%
     top_n(n = 50, notas)
   
-  plot = dados %>% ggplot(aes(x = genotipo, y = notas, fill = notas, label = round(notas,1))) +
+  plot = ggplot(dados, aes(x = reorder(genotipo, -notas), y = notas, fill = notas, label = round(notas,1))) +
     geom_col(width = 0.85, colour = "black") +
     coord_polar() +
     scale_fill_gradientn(colors = c("red","yellow","green")) +

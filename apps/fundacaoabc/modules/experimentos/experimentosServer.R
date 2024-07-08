@@ -176,6 +176,20 @@ experimentoServer = function(input, output, session) {
     
   })
   
+  # Atualizando input de selecao de experimentos
+  observe({
+      
+    experimentos =  experimentos.provider.unique(dadosFiltrados(), 'id_ensaio')
+    
+    updateSelectInput(
+      session = session,
+      inputId = "experimentosInputDoencas",
+      choices =  c("Todos", experimentos),
+      selected = c("Todos")
+    )
+    
+  })
+  
   # Atualizando input local analise estatistica
   observe({
     locais = experimentos.provider.unique(dadosFiltrados(), 'local')
@@ -217,6 +231,54 @@ experimentoServer = function(input, output, session) {
     
   })
   
+  #==============================================#
+  output$tabelaExperimentosDownload = renderDataTable({
+    
+    dados = dadosFiltrados()
+    
+    names(dados) = c('id', 'ID ensaio', 'Estado', 'Cidade', 'Local', 'Tipo de grão', 'Genotipo',
+                     'Safra', 'Repetição', 'Produtividade', 'Grupo maturação', 'Data de semeadura',
+                     'Data de emergência', 'Data início floração', 'Data início ponto colheita',
+                     'Data início colheita', 'Cultura', 'local', 'Irrigação', 'Fungicida', 'Cultura')
+    
+    
+    return(dados)
+    
+  }, options = list(lengthMenu = c(5,10, 25), pageLength = 10, scrollX = TRUE))
+  
+  #==============================================#
+  
+  #==============================================#
+  #====== Baixar dados experimentos =============#
+  output$downloadDadosExperimentos = downloadHandler(
+    filename = function() {
+      paste(
+        'dados',
+        "-",
+        as.character(Sys.time()),
+        '.csv',
+        sep = ''
+      )
+    },
+    content = function(con) {
+      
+      dados = dadosFiltrados()
+      
+      names(dados) = c('id', 'ID ensaio', 'Estado', 'Cidade', 'Local', 'Tipo de grão', 'Genotipo',
+                       'Safra', 'Repetição', 'Produtividade', 'Grupo maturação', 'Data de semeadura',
+                       'Data de emergência', 'Data início floração', 'Data início ponto colheita',
+                       'Data início colheita', 'Cultura', 'local', 'Irrigação', 'Fungicida', 'Cultura')
+      
+      write.csv(dados, con)
+      
+    }
+  )
+  #=============================================#
+  
+
+  
+  #==============================================#
+  #====== Resultado diagnotico ==================#
   output$tabela_diagnostico_Exibir = renderDataTable({
     
     diagnostico = service.getDiagostico(dadosFiltrados(), input)
@@ -529,5 +591,23 @@ experimentoServer = function(input, output, session) {
       file.rename(out, file)
     }
   )
+  
+  #==============================================#
+  # Info box com informações do numero de genotipos
+  output$numeroGenotiposInfo = renderInfoBox({
+    
+    numeroGenotipos = length(unique(dadosFiltrados()$id_ensaio))
+    
+    infoBox(
+      width = 12,
+      title = "Número de genotipos",
+      value = numeroGenotipos,
+      icon = icon('flask')
+    )
+    
+  })
+  
+  #==============================================#
+  
   
 }

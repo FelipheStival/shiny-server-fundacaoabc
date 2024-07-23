@@ -43,7 +43,7 @@ doencasUI = div(
         selectizeInput(
           inputId = "safraInputDoencas2",
           label = "Selecione a safra:",
-          choices = "15/16",
+          choices = "20_21",
           options = list(maxItems = 1)
         )
      )
@@ -81,7 +81,6 @@ doencasUI = div(
                   )
                 )     
               )
-      
         )
       
       #=========================================================#

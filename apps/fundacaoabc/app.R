@@ -62,6 +62,7 @@ app.LoadModules = function() {
                          recursive = T,
                          full.names = T
                          )
+    
     log = sapply(modulos,source,encoding="utf-8")
     
 }
@@ -72,7 +73,7 @@ app.LoadModules = function() {
 app.globalFunctions = function(){
   
   customSpinner <<- function(outputFun){
-    f = withSpinner(outputFun, image = 'logos//loader.png', image.width = '100px', image.height = '70px')
+    f = withSpinner(outputFun, image = 'logos//loader.png', image.width = '200px', image.height = '100px')
     return(f)
   }
   

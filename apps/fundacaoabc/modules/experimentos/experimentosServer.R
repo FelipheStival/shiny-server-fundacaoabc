@@ -124,7 +124,7 @@ experimentoServer = function(input, output, session) {
       session = session,
       inputId = "safraInputDoencas",
       choices = safras,
-      selected = "15/16"
+      selected = "20_21"
     ) 
   })
   

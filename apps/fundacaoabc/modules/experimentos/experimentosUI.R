@@ -74,7 +74,7 @@ experimentosUI =  div(
           selectizeInput(
             inputId = "safraInputDoencas",
             label = "Selecione a safra:",
-            choices = "15/16",
+            choices = "20_21",
             options = list(maxItems = 2)
           ),
           selectInput(

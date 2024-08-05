@@ -39,9 +39,13 @@ experimentoServer = function(input, output, session) {
   
   # Dados experimentos
   dadosExperimentos = reactive({
+    
     mediaSelect = input$select_analiseEstatistica_media
-    y = calcula_predict(dadosFiltrados(), "produtividade", "repeticao", "local","genotipo", "safra", mediaSelect)
+    experimentosSelect = input$select_analiseEstatistica_experimentos
+    
+    y = calcula_predict(dadosFiltrados(), "produtividade", "repeticao", "local","genotipo", "safra", mediaSelect, experimentosSelect)
     return(y$pred)
+    
   })
   
   # Dados gráficos gge
@@ -60,6 +64,7 @@ experimentoServer = function(input, output, session) {
   
   # Evento para desabilitar o input
   observe({
+    
     if(!is.null(input$tabGraficosExperimentos) && !is.null(input$subTabGraficosExperimentos)){
       
       if(input$tabGraficosExperimentos == 'Gráfico media local'){
@@ -74,33 +79,16 @@ experimentoServer = function(input, output, session) {
         
         if(input$subTabGraficosExperimentos == 'Gráfico cluster'){
           shinyjs::disable('select_analiseEstatistica_media')
+        } else if(input$subTabGraficosExperimentos == 'Gráfico média harmônica') {
+          shinyjs::disable('select_analiseEstatistica_media')
+          shinyjs::disable('select_analiseEstatistica_local')
         }
+      
         
       }
       
       # Atualiza o conteúdo da tab
       updateTabsetPanel(session, "tabs", selected = input$tabGraficosExperimentos)
-      
-    }
-    
-  })
-  
-  # Evento de esconder campo tipo de grao de acordo com a cultura
-  observe({
-    
-    if(!is.null(input$culturaInputDoencas)){
-      
-      if(input$culturaInputDoencas == 'Soja') {
-        
-        shinyjs::show('grupoMaturacaoInputDoencas', TRUE)
-        shinyjs::hide('tipodegraoInputDoencas', TRUE)
-        
-      } else {
-        
-        shinyjs::show('tipodegraoInputDoencas', TRUE)
-        shinyjs::hide('grupoMaturacaoInputDoencas', TRUE)
-        
-      }
       
     }
     
@@ -117,54 +105,113 @@ experimentoServer = function(input, output, session) {
     )
   })
   
+  # Atualizando input ensaios
+  observeEvent(input$culturaInputDoencas, {
+    
+    ensaios = experimentos.provider.unique(dadosFiltrados(), 'id_ensaio')
+    updateSelectInput(
+      session = session,
+      inputId = "ensaiosInputDoencas",
+      choices = c('Todos', ensaios),
+      selected = 'Todos'
+    )
+    
+  })
+  
   # Atualizando input safras
-  observe({
-    safras = sort(experimentos.provider.unique(dadosEnsaios(), 'safra'))
+  observeEvent(c(input$culturaInputDoencas, input$ensaiosInputDoencas), {
+    
+    safras = sort(experimentos.provider.unique(dadosFiltrados(), 'safra'))
+    
     updateSelectInput(
       session = session,
       inputId = "safraInputDoencas",
-      choices = safras,
-      selected = "15/16"
+      choices = c('Todos', safras),
+      selected = 'Todos'
     ) 
+    
   })
   
   # Atualizando input estado
-  observe({
-    estados = experimentos.provider.unique(dadosEnsaios(), 'estado')
+  observeEvent(c(input$culturaInputDoencas, input$ensaiosInputDoencas, input$safraInputDoencas), {
+    
+    estados = experimentos.provider.unique(dadosFiltrados(), 'estado')
+    
     updateSelectInput(
       session = session,
       inputId = "estadoInputDoencas",
       choices = c("Todos", estados),
       selected = "Todos"
     ) 
+    
   })
   
   # Atualizando input cidades
-  observe({
-    cidades = experimentos.provider.unique(dadosEnsaios(), 'cidade')
+  observeEvent(c(input$culturaInputDoencas, input$ensaiosInputDoencas, input$safraInputDoencas, input$estadoInputDoencas), {
+    
+    cidades = experimentos.provider.unique(dadosFiltrados(), 'cidade')
+    
     updateSelectInput(
       session = session,
       inputId = "cidadeInputDoencas",
       choices = c("Todos", cidades),
       selected = "Todos"
     ) 
+    
+  })
+  
+  # Atualizando input irrigacao
+  observeEvent(c(input$culturaInputDoencas, input$ensaiosInputDoencas, input$safraInputDoencas, input$estadoInputDoencas, input$cidadeInputDoencas), {
+    
+    irrigacao = experimentos.provider.unique(dadosFiltrados(), 'irrigacao')
+    
+    updateSelectInput(
+      session = session,
+      inputId = "irrigacaoInputDoencas",
+      choices = c("Todos", irrigacao),
+      selected = "Todos"
+    ) 
+    
+  })
+  
+  # Atualizando input fungicida
+  observeEvent(c(input$culturaInputDoencas, input$ensaiosInputDoencas, input$safraInputDoencas, input$estadoInputDoencas, input$cidadeInputDoencas, input$irrigacaoInputDoencas), {
+    
+    fungicida = experimentos.provider.unique(dadosFiltrados(), 'fungicida')
+    
+    updateSelectInput(
+      session = session,
+      inputId = "fungicidaInputDoencas",
+      choices = c("Todos", fungicida),
+      selected = "Todos"
+    )
+    
   })
   
   # Atualizando input tipo de grao
-  observe({
-    tipoGraos = experimentos.provider.unique(dadosEnsaios(), 'tipo_de_grao')
+  observeEvent(c(input$culturaInputDoencas, input$ensaiosInputDoencas, input$safraInputDoencas, input$estadoInputDoencas, input$cidadeInputDoencas, input$irrigacaoInputDoencas, input$fungicidaInputDoencas), {
+    
+    tipoGraos = experimentos.provider.unique(dadosFiltrados(), 'tipo_de_grao')
+    
     updateSelectInput(
       session = session,
       inputId = "tipodegraoInputDoencas",
       choices = c("Todos", tipoGraos),
       selected = "Todos"
     ) 
+    
+    if(all(tipoGraos == 'Não possui')) {
+      shinyjs::disable('tipodegraoInputDoencas')
+    } else {
+      shinyjs::enable('tipodegraoInputDoencas')
+    }
+    
   })
   
   # Atualizando input grupo de maturação
-  observe({
+  observeEvent(c(input$culturaInputDoencas, input$ensaiosInputDoencas, input$safraInputDoencas, input$estadoInputDoencas, input$cidadeInputDoencas, input$irrigacaoInputDoencas, input$fungicidaInputDoencas, input$tipodegraoInputDoencas), {
     
-    grupoMaturacao = experimentos.provider.unique(dadosEnsaios(), 'grupo_maturacao')
+    grupoMaturacao = experimentos.provider.unique(dadosFiltrados(), 'grupo_maturacao')
     grupoMaturacao = grupoMaturacao[!is.na(grupoMaturacao)]
     
     updateSelectInput(
@@ -174,40 +221,82 @@ experimentoServer = function(input, output, session) {
       selected = "Todos"
     ) 
     
+    if(length(grupoMaturacao) == 0) {
+      shinyjs::disable('grupoMaturacaoInputDoencas')
+    } else {
+      shinyjs::enable('grupoMaturacaoInputDoencas')
+    }
+    
   })
   
-  # Atualizando input de selecao de experimentos
-  observe({
-      
-    experimentos =  experimentos.provider.unique(dadosFiltrados(), 'id_ensaio')
+  # Atualizando input de epoca
+  observeEvent(c(input$culturaInputDoencas, input$ensaiosInputDoencas, input$safraInputDoencas, input$estadoInputDoencas, input$cidadeInputDoencas, input$irrigacaoInputDoencas, input$fungicidaInputDoencas, input$tipodegraoInputDoencas), {
+    
+    epoca = experimentos.provider.unique(dadosFiltrados(), 'epoca')
     
     updateSelectInput(
       session = session,
-      inputId = "experimentosInputDoencas",
-      choices =  c("Todos", experimentos),
-      selected = c("Todos")
+      inputId = "epocaInputDoencas",
+      choices = c("Todos", epoca),
+      selected = "Todos"
     )
+    
+    if(all(is.na(epoca))) {
+      shinyjs::disable('epocaInputDoencas')
+    } else {
+      shinyjs::enable('epocaInputDoencas')
+    }
     
   })
   
-  # Atualizando input local analise estatistica
+  # Atualizando input de local analise estatistica
   observe({
+    
     locais = experimentos.provider.unique(dadosFiltrados(), 'local')
     updateSelectInput(
       session = session,
       inputId = "select_analiseEstatistica_local",
-      choices = locais
+      choices = locais,
+      selected = locais[1]
     )
+    
   })
+  
+  # Atualiando input de experimentos Analise estatistica
+  observe({
+    
+    # Atualizando input de experimentos
+    if(!is.null(input$select_analiseEstatistica_local) && input$tabGraficosExperimentos == 'Gráfico media local') {
+      
+      experimentos = dadosFiltrados()
+      experimentos = unique(experimentos[experimentos$local %in% input$select_analiseEstatistica_local, 'id_ensaio'])
+      
+    } else {
+      
+      experimentos = experimentos.provider.unique(dadosFiltrados(), 'id_ensaio')
+      
+    }
+    
+    updateSelectInput(
+      session = session,
+      inputId = "select_analiseEstatistica_experimentos",
+      choices = c('Todos', experimentos),
+      selected = 'Todos'
+    )
+    
+  })
+  
   
   # Atualizando input local Potencial genótipo produtivo
   observe({
+    
     locais = experimentos.provider.unique(dadosFiltrados(), 'local')
     updateSelectInput(
       session = session,
       inputId = "select_analiseEstatistica_local_potencial_genotipo",
       choices = locais
     )
+    
   })
   
   # Atualizando lista genotipos grafico linhas e GGE
@@ -239,7 +328,7 @@ experimentoServer = function(input, output, session) {
     names(dados) = c('id', 'ID ensaio', 'Estado', 'Cidade', 'Local', 'Tipo de grão', 'Genotipo',
                      'Safra', 'Repetição', 'Produtividade', 'Grupo maturação', 'Data de semeadura',
                      'Data de emergência', 'Data início floração', 'Data início ponto colheita',
-                     'Data início colheita', 'Cultura', 'local', 'Irrigação', 'Fungicida', 'Cultura')
+                     'Data início colheita', 'Cultura', 'Irrigação', 'Fungicida', 'Cultura', 'Epoca')
     
     
     return(dados)
@@ -251,6 +340,7 @@ experimentoServer = function(input, output, session) {
   #==============================================#
   #====== Baixar dados experimentos =============#
   output$downloadDadosExperimentos = downloadHandler(
+    
     filename = function() {
       paste(
         'dados',
@@ -267,7 +357,7 @@ experimentoServer = function(input, output, session) {
       names(dados) = c('id', 'ID ensaio', 'Estado', 'Cidade', 'Local', 'Tipo de grão', 'Genotipo',
                        'Safra', 'Repetição', 'Produtividade', 'Grupo maturação', 'Data de semeadura',
                        'Data de emergência', 'Data início floração', 'Data início ponto colheita',
-                       'Data início colheita', 'Cultura', 'local', 'Irrigação', 'Fungicida', 'Cultura')
+                       'Data início colheita', 'Cultura', 'Irrigação', 'Fungicida', 'Cultura', 'Epoca')
       
       write.csv(dados, con)
       
@@ -355,7 +445,7 @@ experimentoServer = function(input, output, session) {
     )
     
     #====================================#
-    dataPlot = calcula_predict(dadosFiltrados(), "produtividade", "repeticao", "local","genotipo", "safra")
+    dataPlot = calcula_predict(dadosFiltrados(), "produtividade", "repeticao", "local","genotipo", "safra", NULL, input$select_analiseEstatistica_experimentos)
     grafico.analiseEstatistica_Unitario(dataPlot$pred, input$select_analiseEstatistica_local)
     
   })
@@ -398,6 +488,21 @@ experimentoServer = function(input, output, session) {
     
   })
   
+  #==============================================#
+  # Grafico "Media harmonica"
+  output$grafico_media_harmonica = renderPlotly({
+    
+    #====================================#
+    # Validacao
+    validate.ids_data = length(unique((dadosFiltrados()$id_ensaio)))
+    
+    validate(
+      need(validate.ids_data > 1, "Nao ha dados suficientes para exibicao do grafico.")
+    )
+    #====================================#
+    grafico.mediaHarmonica(dadosFiltrados(), input$select_analiseEstatistica_experimentos)
+    
+  })
   
   #==============================================#
   # Grafico "linhas"
@@ -413,6 +518,40 @@ experimentoServer = function(input, output, session) {
     )
     
     grafico.GraficoLinhas(dadosEstatisticaMedia())
+    
+  })
+  
+  #==============================================#
+  # Grafico "Ambiental relatvo"
+  output$graficoAmbientalRelativo = renderPlot({
+    
+    #====================================#
+    # Validacao
+    validate.ids_data = length(unique((dadosFiltrados()$id_ensaio)))
+    
+    validate(
+      need(validate.ids_data > 1, "Nao ha dados suficientes para exibicao do grafico."),
+      need(length(input$GenotipoSelectDoencas) > 1, 'Selecione mais de um genotipo')
+    )
+    
+    grafico.ambientalRelativo(dadosFiltrados(), input$GenotipoSelectDoencas)
+    
+  })
+  
+  #==============================================#
+  # Grafico "Ambiental relatvo"
+  output$graficoAmbientalLocal = renderPlot({
+    
+    #====================================#
+    # Validacao
+    validate.ids_data = length(unique((dadosFiltrados()$id_ensaio)))
+    
+    validate(
+      need(validate.ids_data > 1, "Nao ha dados suficientes para exibicao do grafico."),
+      need(length(input$GenotipoSelectDoencas) > 1, 'Selecione mais de um genotipo')
+    )
+    
+    grafico.graficoAmbientalLocal(dadosFiltrados(), input$GenotipoSelectDoencas)
     
   })
   
@@ -455,6 +594,7 @@ experimentoServer = function(input, output, session) {
     
     
     grafico.analiseGGE_OrdemDeAmbiente(gge)
+    
   })
   #==============================================#
   
@@ -476,6 +616,7 @@ experimentoServer = function(input, output, session) {
     #====================================#
     
     grafico.analiseGGE_OrdemDeGenotipo(gge)
+    
   })
   #==============================================#
   
@@ -497,6 +638,7 @@ experimentoServer = function(input, output, session) {
     #====================================#
     
     grafico.analiseGGE_RelacaoEntreAmbientes(gge)
+    
   })
   #==============================================#
   
@@ -572,37 +714,76 @@ experimentoServer = function(input, output, session) {
   output$downloadRelatorio = downloadHandler(
     
     filename = function() {
-      paste("my-report", sep = ".", switch(
-        input$inputRelatorioFormato, PDF = "pdf", HTML = "html", Word = "docx"
+      
+      nomeArquivo = paste('relatório', format(Sys.time(), "%d/%m/%Y %H:%M:%S"))
+      nomeArquivo = str_replace_all(nomeArquivo, ' ', '_')
+      
+      paste(nomeArquivo, sep = ".", switch(
+        input$inputRelatorioFormato, PDF = "pdf", HTML = "html", CSV = "csv"
       ))
+      
     },
     
     content = function(file) {
-      src <- normalizePath("report.Rmd")
-      owd <- setwd(tempdir())
-      on.exit(setwd(owd))
-      file.copy(src, "report.Rmd", overwrite = TRUE)
       
-      out <- render("report.Rmd", switch(
-        input$inputRelatorioFormato,
-        PDF = pdf_document(), HTML = html_document(), Word = word_document()
-      ))
+      if(input$inputRelatorioFormato == 'HTML') {
+        
+        src = normalizePath("report.Rmd")
+        owd = setwd(tempdir())
+        on.exit(setwd(owd))
+        file.copy(src, "report.Rmd", overwrite = TRUE)
+        
+        out = render("report.Rmd", switch(
+          input$inputRelatorioFormato,
+          PDF = pdf_document(), HTML = html_document(), Word = word_document()
+        ))
+        
+        file.rename(out, file)
+        
+      } else if(input$inputRelatorioFormato == 'CSV') {
+        
+        if(input$tabGraficosExperimentos == 'Gráfico geral') {
+          
+          dados = dadosExperimentos()
+          names(dados) = c('Genotipo', 'Local', 'Safra', 'Predição')
+          
+        } else if(input$tabGraficosExperimentos == 'Gráfico media local') {
+          dados = dadosFiltrados()
+        }
       
-      file.rename(out, file)
+        write.csv(dados, file)
+        
+      }
+      
     }
   )
   
   #==============================================#
   # Info box com informações do numero de genotipos
-  output$numeroGenotiposInfo = renderInfoBox({
+  output$numeroExperimentosInfo = renderInfoBox({
     
-    numeroGenotipos = length(unique(dadosFiltrados()$id_ensaio))
+    ensaios = dadosFiltrados()
+    indexTodos = which(input$select_analiseEstatistica_experimentos %in% 'Todos')
     
+    if(length(indexTodos) == 0 && !is.null(input$select_analiseEstatistica_experimentos)) {
+      
+      numeroExperimentos = length(input$select_analiseEstatistica_experimentos)
+      
+    } else {
+      
+      if(!is.null(input$select_analiseEstatistica_local) && input$tabGraficosExperimentos == 'Gráfico media local') {
+        numeroExperimentos = length(unique(ensaios[ensaios$local %in% input$select_analiseEstatistica_local, 'id_ensaio']))
+      } else {
+        numeroExperimentos = length(unique(ensaios$id_ensaio))
+      }
+      
+    }
+     
     infoBox(
       width = 12,
-      title = "Número de genotipos",
-      value = numeroGenotipos,
-      icon = icon('flask')
+      title = "Número de experimentos",
+      value = numeroExperimentos,
+      icon = icon('hashtag')
     )
     
   })

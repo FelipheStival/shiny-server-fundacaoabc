@@ -20,10 +20,10 @@ experimentos.provider.dados = function() {
 	   data_inicio_ponto_colheita,
 	   data_inicio_colheita,
 	   cultura.nome as cultura,
-	   locais.nome as local,
 	   irrigacao,
 	   fungicida,
-	   cultura.nome as cultura
+	   cultura.nome as cultura,
+	   epoca
 	   
 	FROM public.ensaios
 	JOIN genotipos ON ensaios.id_genotipo = genotipos.id
@@ -35,11 +35,11 @@ experimentos.provider.dados = function() {
   
   dados = banco.provider.executeQuery(statement, DOENCA_DB_DATABASE)
   
-  dados[dados$irrigacao == 't', 'irrigacao'] = 'sim'
-  dados[dados$irrigacao == 'f', 'irrigacao'] = 'nao'
+  dados[dados$irrigacao == 't', 'irrigacao'] = 'Sim'
+  dados[dados$irrigacao == 'f', 'irrigacao'] = 'Não'
   
-  dados[dados$fungicida == 't', 'fungicida'] = 'com'
-  dados[dados$fungicida == 'f', 'fungicida'] = 'sem'
+  dados[dados$fungicida == 't', 'fungicida'] = 'Com'
+  dados[dados$fungicida == 'f', 'fungicida'] = 'Sem'
   
   return(dados)
   
@@ -71,28 +71,18 @@ experimentos.provider.dadosFiltrados = function(dados, input) {
   indexSafra = which(input[['safraInputDoencas']] == "Todos")
   indexCategoria =  which(input[['categoriaInputDoencas']] == "Todos")
   indexGrupoMaturacao = which(input[['grupoMaturacaoInputDoencas']] == "Todos")
-  indexExperimentos =  which(input[['experimentosInputDoencas']] == "Todos")
+  indexExperimentos =  which(input[['ensaiosInputDoencas']] == "Todos")
+  indexirrigacao =  which(input[['irrigacaoInputDoencas']] == "Todos")
+  indexFungicida = which(input[['fungicidaInputDoencas']] == "Todos")
   
   # Filtrando cultura
-  if(length(indexCultura) == 0 & !is.null(input$culturaInputDoencas)){
+  if(length(indexCultura) == 0 & !is.null(input$culturaInputDoencas)) {
     filtrado = filtrado[filtrado$cultura %in% input$culturaInputDoencas,]
   }
   
-  # Filtrando cidade
-  if(length(indexCidade) == 0 & !is.null(input$cidadeInputDoencas)){
-    filtrado = filtrado[filtrado$cidade %in% input$cidadeInputDoencas,]
-  }
-  
-  # Filtrando estado
-  if(length(indexEstado) == 0 & !is.null(input$estadoInputDoencas)){
-    filtrado = filtrado[filtrado$estado %in% input$estadoInputDoencas, ]
-  }
-  
-  # Filtrando tipo de grao
-  if(length(indexTipoGrao) == 0 & !is.null(input$tipodegraoInputDoencas) && !is.null(input$culturaInputDoencas)){
-    if(input$culturaInputDoencas == 'Feijão'){
-      filtrado = filtrado[filtrado$tipo_de_grao %in% input$tipodegraoInputDoencas, ]
-    }
+  # Filtrando experimentos
+  if(length(indexExperimentos) == 0 & !is.null(input$ensaiosInputDoencas)){
+    filtrado = filtrado[filtrado$id_ensaio %in% input$ensaiosInputDoencas, ]
   }
   
   # Filtrando safra
@@ -100,31 +90,29 @@ experimentos.provider.dadosFiltrados = function(dados, input) {
     filtrado = filtrado[filtrado$safra %in% input$safraInputDoencas, ]
   } 
   
-  # Filtrando categoria
-  if(length(indexSafra) == 0 & !is.null(input$safraInputDoencas)){
-    filtrado = filtrado[filtrado$safra %in% input$safraInputDoencas, ]
-  } 
+  # Filtrando estado
+  if(length(indexEstado) == 0 & !is.null(input$estadoInputDoencas)){
+    filtrado = filtrado[filtrado$estado %in% input$estadoInputDoencas, ]
+  }
   
-  # Filtrando fungicida
-  if(!is.null(input$fungicidaInputDoencas)){
-    filtrado = filtrado[filtrado$fungicida == input$fungicidaInputDoencas, ]
+  # Filtrando cidade
+  if(length(indexCidade) == 0 & !is.null(input$cidadeInputDoencas)){
+    filtrado = filtrado[filtrado$cidade %in% input$cidadeInputDoencas,]
   }
   
   # Filtrando irrigação
-  if(!is.null(input$irrigacaoInputDoencas)){
+  if(length(indexirrigacao) == 0 & !is.null(input$irrigacaoInputDoencas)){
     filtrado = filtrado[filtrado$irrigacao == input$irrigacaoInputDoencas, ]
   }
   
-  # Filtrando grupo de maturação
-  if(length(indexGrupoMaturacao) == 0 & !is.null(input$grupoMaturacaoInputDoencas) && !is.null(input$grupoMaturacaoInputDoencas)){
-    if(input$culturaInputDoencas == 'Soja'){
-      filtrado = filtrado[filtrado$grupo_maturacao %in% input$grupoMaturacaoInputDoencas, ]
-    }
+  # Filtrando fungicida
+  if(length(indexFungicida) == 0 & !is.null(input$fungicidaInputDoencas)){
+    filtrado = filtrado[filtrado$fungicida == input$fungicidaInputDoencas, ]
   }
   
-  # Filtrando experimentos
-  if(!is.null(input$experimentosInputDoencas)){
-    filtrado = filtrado[filtrado$id_ensaio %in% input$experimentosInputDoencas, ]
+  # Filtrando tipo de grao
+  if(length(indexTipoGrao) == 0 & !is.null(input$tipodegraoInputDoencas)){
+    filtrado = filtrado[filtrado$tipo_de_grao %in% input$tipodegraoInputDoencas, ]
   }
   
   return(filtrado)
@@ -678,8 +666,15 @@ model.dadosRelatorio = function(dadosRelatorio){
 #==============================================#
 # Calcula os preditos com base no banco de dados, ajustando o modelo adequado
 # Note que df nesse caso é o banco de dados filtrado acima
-
-calcula_predict = function(df, trait, rep, site, gid, year, mediaFilterSelect = "TODOS"){
+#==============================================#
+calcula_predict = function(df, trait, rep, site, gid, year, mediaFilterSelect = "TODOS", experimentosSelect = NULL) {
+  
+  # Filtrando por experimentos
+  indexTodos = which(experimentosSelect %in% 'Todos')
+  
+  if(length(indexTodos) == 0 && !is.null(experimentosSelect)) {
+    df = df[df$id_ensaio %in% experimentosSelect,]
+  }
   
   dataset = df[,c(trait, rep, site, gid, year)]
   dataset$rep = as.factor(dataset$rep)
@@ -949,22 +944,22 @@ count_class = function(tabela_cluster){
 #==============================================#
 # PGP (Potencial Gen. de Prod.)
 #==============================================#
-gen_prod_pot <- function(dados){
+gen_prod_pot = function(dados){
   
-  tab_cluster <- ordena_cluster(dados, "produtividade")
-  tab_classe <- count_class(tab_cluster)
+  tab_cluster = ordena_cluster(dados, "produtividade")
+  tab_classe = count_class(tab_cluster)
   
-  tab_classe$totalcont <- rowSums(tab_classe[3:5])
-  tab_classe$a <- tab_classe$Low/tab_classe$totalcont
-  tab_classe$b <- tab_classe$Medium/tab_classe$totalcont
-  tab_classe$c <- tab_classe$High/tab_classe$totalcont
+  tab_classe$totalcont = rowSums(tab_classe[3:5])
+  tab_classe$a = tab_classe$Low/tab_classe$totalcont
+  tab_classe$b = tab_classe$Medium/tab_classe$totalcont
+  tab_classe$c = tab_classe$High/tab_classe$totalcont
   
-  A <- 0
-  B <- 5
-  C <- 10
+  A = 0
+  B = 5
+  C = 10
   
-  tab_classe$notas <- A*tab_classe$a + B*tab_classe$b + C*tab_classe$c
-  tab_classe <- na.omit(tab_classe)
+  tab_classe$notas = A*tab_classe$a + B*tab_classe$b + C*tab_classe$c
+  tab_classe = na.omit(tab_classe)
   
   return(tab_classe)
 }

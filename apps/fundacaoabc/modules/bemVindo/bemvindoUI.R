@@ -4,6 +4,7 @@
 #=====================================================================
 bemVindoUI = function() {
   fluidPage(
+    useShinyjs(),
     includeCSS("www//styles//styles.css"),
     HTML("
     <div id = 'wave-background'>
@@ -41,6 +42,6 @@ bemVindoUI = function() {
          </div>
     </div>"
     ),
-  includeScript("www//js//menu.js")
+    includeScript('www//js//index.js')
   )
 }

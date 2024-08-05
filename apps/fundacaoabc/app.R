@@ -47,6 +47,7 @@ app.LoadPackages = function()
     require(shinybusy)
     require(flexclust)
     require(plotly)
+    require(Cairo)
   
     #==============================================#
 }

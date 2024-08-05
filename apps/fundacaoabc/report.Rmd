@@ -19,33 +19,38 @@ color: rgb(255,255,255);
 
 div#header{
 
-background-color: rgb(0,102,153);
-background-image: linear-gradient(to bottom right, rgb(0,102,153), rgb(0,153,102));
-
-
+  background-color: rgb(0,102,153);
+  background-image: linear-gradient(to bottom right, rgb(0,102,153), rgb(0,153,102));
 
 }
 
-caption{text-align:center;
-color: black;
-font-weight: bold;
-font-size: 35px;
+caption{
+  text-align:center;
+  color: black;
+  font-weight: bold;
+  font-size: 35px;
 }
 
 header{
-border-style: solid;
-background: rgb(204,204,204);
+  border-style: solid;
+  background: rgb(204,204,204);
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
 }
 
-thead{text-align:center;
-background: rgb(76,175,80);
-border-style: solid;
+thead{
+  text-align:center;
+  background: rgb(76,175,80);
+  border-style: solid;
 }
 
 ```
 
-
-## Variáveis selecionadas
+***
+### Variáveis selecionadas
 ***
 
 ```{r, echo=FALSE}
@@ -80,21 +85,65 @@ out = datatable(criarInfomacoes(), style = 'bootstrap')
 out  
 ```
 
-Data
+***
+### Experimentos selecionados
+***
 
 ```{r, echo=FALSE, warning = FALSE}
+
+indexTodos = which(input$select_analiseEstatistica_experimentos %in% 'Todos')
+ensaios = dadosFiltrados()
+
+if(length(indexTodos) == 0 && !is.null(input$select_analiseEstatistica_experimentos)) {
+  
+  ensaios = input$select_analiseEstatistica_experimentos
+  
+} else {
+  
+  if(!is.null(input$select_analiseEstatistica_local) && input$tabGraficosExperimentos == 'Gráfico media local') {
+    ensaios = unique(ensaios[ensaios$local %in% input$select_analiseEstatistica_local, 'id_ensaio'])
+    
+  } else {
+    ensaios = unique(ensaios$id_ensaio)
+  }
+  
+}
+
+ensaios = data.frame(
+  ensaios  = ensaios
+)
+
+names(ensaios) = 'Ensaios selecionados'
+optionsTable = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))
+
+out = datatable(ensaios, style = 'bootstrap', options = optionsTable)
+out
+
+```
+
+***
+### Resultado
+***
+
+```{r, echo=FALSE, warning = FALSE}
+
 dadosGenotipos = dadosRelatorio()
 dadosGenotipos = dadosGenotipos[order(dadosGenotipos$mean, decreasing=TRUE),]
 dadosGenotipos$mean = round(dadosGenotipos$mean,0)
 
 
 dadosGenotipos = dadosGenotipos[,c("gid", "mean")]
-colnames(dadosGenotipos) <- c("Cultivar", "Média(BLUP, kg/ha)")                                
+colnames(dadosGenotipos) = c("Cultivar", "Média(BLUP, kg/ha)")                                
 
 # Criando tabela
 out = datatable(dadosGenotipos, style = 'bootstrap',options = list(columnDefs = 
-                                                                     list(list(className = 'dt-center', 
-                                                                               targets = "_all")))) %>%
+                                                                     list(
+                                                                       list(className = 'dt-center', 
+                                                                            targets = "_all")
+                                                                       )
+                                                                   )
+                ) %>%
+  
   formatStyle('Média(BLUP, kg/ha)',
               background = styleColorBar(dadosGenotipos[,"Média(BLUP, kg/ha)"], '#90EE90'),
               backgroundSize = '95% 50%',
@@ -104,3 +153,4 @@ out = datatable(dadosGenotipos, style = 'bootstrap',options = list(columnDefs =
 
 out
 ```
+

@@ -6,6 +6,9 @@ server = shinyServer(function(input, output, session) {
     check_credentials = check_credentials(credenciais)
   )
   
+  # Javascript para alterar o title
+  runjs(sprintf('$("title").html("%s");', APP_NAME))
+  
   # Router
   router$server(input, output, session)
   

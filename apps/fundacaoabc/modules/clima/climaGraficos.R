@@ -321,7 +321,7 @@ grafico.GraficoAnomalia = function(cidade,
       sign = ifelse(anom > 0, "pos", "neg")
     )
   
-  Meses = c('Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'May')
+  Meses = c('Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'May', 'Apr')
   
   dados = dados %>%
     mutate(filtro = format(date, '%m')) %>%
@@ -341,7 +341,9 @@ grafico.GraficoAnomalia = function(cidade,
            mo == "Jan" |
              mo == "Feb" |
              mo == "Mar" |
-             mo == "May")
+             mo == "May" |
+             mo == "Apr"
+           )
   
   Filter_rbind = rbind(Filter_ano_um, Filter_ano_dois)
   

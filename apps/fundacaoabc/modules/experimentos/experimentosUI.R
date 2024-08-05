@@ -74,25 +74,26 @@ experimentosUI =  div(
           selectInput(
             inputId = "culturaInputDoencas",
             label = "Selecione a cultura:",
-            choices = "Feijão"
+            choices = c()
           ),
-          #selectInput(
-            #inputId = "experimentosInputDoencas",
-            #label = "Selecione os experimentos:",
-            #choices = "Todos",
-            #multiple = T,
-            #selectize = T
-          #),
+          
+          selectInput(
+            inputId = "ensaiosInputDoencas",
+            label = "Selecione os ensaios:",
+            choices = c(),
+            multiple = T,
+            selectize = T
+          ),
           selectizeInput(
             inputId = "safraInputDoencas",
             label = "Selecione a safra:",
-            choices = "15/16",
+            choices = c(),
             options = list(maxItems = 2)
           ),
           selectInput(
             inputId = "estadoInputDoencas",
             label = "Selecione o estado:",
-            choices = "Todos",
+            choices = c(),
             multiple = T,
             selectize = T
           ),
@@ -106,16 +107,12 @@ experimentosUI =  div(
           selectInput(
             inputId = "irrigacaoInputDoencas",
             label = "irrigacao:",
-            choices = c("Sim" = "sim",
-                        "Nao" = "nao"),
-            selected = "nao"
+            choices = c()
           ),
           selectInput(
             inputId = "fungicidaInputDoencas",
             label = "fungicida: ",
-            choices = c("Sim" = "com",
-                        "Nao" = "sem"),
-            selected = "sem"
+            choices = c()
           ),
           selectInput(
             inputId = "tipodegraoInputDoencas",
@@ -123,7 +120,7 @@ experimentosUI =  div(
             choices = "Todos",
             selected = "Todos",
             multiple = T,
-            selectize = T,
+            selectize = T
           ),
           selectInput(
             inputId = "grupoMaturacaoInputDoencas",
@@ -232,7 +229,7 @@ experimentosUI =  div(
                   width = 2,
                   selectInput(
                     "GenotipoSelectDoencas",
-                    "Escolha os genotipos",
+                    "Escolha os genótipos",
                     selected = NULL,
                     choices = NULL,
                     multiple = T,
@@ -241,7 +238,20 @@ experimentosUI =  div(
                 ),
                 box(
                   width = 10,
-                  plotOutput("graficolinha", width = "100%", height = "80vh")  %>% customSpinner()
+                  tabsetPanel(
+                    tabPanel(
+                      title = 'Gráfico de linhas',
+                      plotOutput("graficolinha", width = "100%", height = "80vh")  %>% customSpinner()
+                    ),
+                    tabPanel(
+                      title = 'Ambiental Relativo',
+                      plotOutput("graficoAmbientalRelativo", width = "100%", height = "80vh")  %>% customSpinner()
+                    ),
+                    tabPanel(
+                      title = 'Ambiental Local',
+                      plotOutput("graficoAmbientalLocal", width = "100%", height = "80vh")  %>% customSpinner()
+                    ),
+                  )
                 )
         ),
         
@@ -258,7 +268,7 @@ experimentosUI =  div(
                     
                     selectInput(
                       inputId = "select_analiseEstatistica_local",
-                      label = "selecione o local:",
+                      label = "Selecione o local:",
                       choices = c("AL_TRA"),
                       selected = "AL_TRA"
                     ),
@@ -271,15 +281,24 @@ experimentosUI =  div(
                                   "Todos" = "TODOS"),
                       selected = "ACIMA"
                     ),
+                    
+                    selectInput(
+                      inputId = "select_analiseEstatistica_experimentos",
+                      label = "Filtro por experimentos:",
+                      choices = c('Todos'),
+                      selected = 'Todos',
+                      multiple = T
+                    ),
+                    
                   ),
                   box(
-                    title = "Download relatorio",
+                    title = "Download relatório",
                     width = 12,
                     status = "warning",
                     radioButtons(
                       inputId = "inputRelatorioFormato",
                       label = "Formato relatorio:",
-                      choices = c("HTML" = "HTML"),
+                      choices = c("HTML" = "HTML", "CSV" = "CSV"),
                       inline = T
                     ),
                     downloadButton(
@@ -289,7 +308,7 @@ experimentosUI =  div(
                     )
                   ),
                   
-                  infoBoxOutput("numeroGenotiposInfo", width = 12)
+                  infoBoxOutput("numeroExperimentosInfo", width = 12)
                   
                 ),
                 column(
@@ -311,6 +330,10 @@ experimentosUI =  div(
                           tabPanel(
                             title = 'Gráfico cluster',
                             plotlyOutput("grafico_geral_cluster", width = "100%", height = "75vh") %>%  customSpinner(), 
+                          ),
+                          tabPanel(
+                            title = 'Gráfico média harmônica',
+                            plotlyOutput("grafico_media_harmonica", width = "100%", height = "75vh") %>%  customSpinner(), 
                           )
                         )
                       ),
